@@ -63,10 +63,5 @@
                 Activities.Add(new Activity(section, Rooms[random.Next(Rooms.Count)], 10 + random.Next(6), Facilitators[random.Next(Facilitators.Count)]));
             }
         }
-
-        private double Fitness()
-        {
-            return 0;
-        }
     }
 }
