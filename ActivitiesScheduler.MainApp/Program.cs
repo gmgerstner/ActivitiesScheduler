@@ -6,7 +6,7 @@
         {
             Console.WriteLine("Starting...");
 
-            ClientAgency agency = new ClientAgency();
+            Schedule agency = new Schedule();
         }
     }
 }

@@ -15,7 +15,7 @@
         public int TimeSlot { get; set; }
         public string Facilitator { get; set; }
 
-        private double Fitness(ClientAgency clientAgency)
+        public double Fitness(Schedule clientAgency)
         {
             double fitness = 0; // For each activity, fitness starts at 0. 
 

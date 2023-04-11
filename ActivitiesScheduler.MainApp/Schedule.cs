@@ -1,6 +1,6 @@
 ﻿namespace ActivitiesScheduler.MainApp
 {
-    internal class ClientAgency
+    internal class Schedule
     {
         private Random random = new Random();
         public List<Activity> Activities { get; set; } = new List<Activity>();
@@ -8,7 +8,7 @@
         public List<Room> Rooms { get; set; } = new List<Room>();
         public List<Section> Sections { get; set; } = new List<Section>();
 
-        public ClientAgency()
+        public Schedule()
         {
             Initialize();
         }
@@ -62,6 +62,16 @@
             {
                 Activities.Add(new Activity(section, Rooms[random.Next(Rooms.Count)], 10 + random.Next(6), Facilitators[random.Next(Facilitators.Count)]));
             }
+        }
+
+        private double TotalFitness()
+        {
+            double sum = 0;
+            foreach (Activity activity in Activities)
+            {
+                sum += activity.Fitness(this);
+            }
+            return sum;
         }
     }
 }
