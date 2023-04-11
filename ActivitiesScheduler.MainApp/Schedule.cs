@@ -1,4 +1,6 @@
-﻿namespace ActivitiesScheduler.MainApp
+﻿using Extensions.Standard; // Softmax
+
+namespace ActivitiesScheduler.MainApp
 {
     internal class Schedule
     {
@@ -7,10 +9,12 @@
         public List<string> Facilitators { get; set; } = new List<string>();
         public List<Room> Rooms { get; set; } = new List<Room>();
         public List<Section> Sections { get; set; } = new List<Section>();
+        public double MutationRate { get; }
 
-        public Schedule()
+        public Schedule(double mutationRate)
         {
             Initialize();
+            MutationRate = mutationRate;
         }
 
         private void Initialize()
@@ -64,7 +68,7 @@
             }
         }
 
-        private double TotalFitness()
+        public double TotalFitness()
         {
             double sum = 0;
             foreach (Activity activity in Activities)
@@ -72,6 +76,38 @@
                 sum += activity.Fitness(this);
             }
             return sum;
+        }
+
+        public void RunGeneration()
+        {
+            Activities.Shuffle(random);
+            for (int p = 0; p < Activities.Count; p += 2)
+            {
+                // Parents
+                Activity parent_activity1 = Activities[p];
+                Activity parent_activity2 = Activities[p + 1];
+
+                //TODO Is this correct for offsprings?
+                // Offspring
+                Activity offspring_activity1 = parent_activity1.Clone();
+                Activity offspring_activity2 = parent_activity2.Clone();
+
+                // Mutation
+                if (random.NextDouble() < MutationRate)
+                {
+                    // Handle mutation
+                    offspring_activity1.Room = Rooms[random.Next(Rooms.Count)];
+                    offspring_activity1.TimeSlot = 10 + random.Next(6);
+                    offspring_activity1.Facilitator = Facilitators[random.Next(Facilitators.Count)];
+                }
+                if (random.NextDouble() < MutationRate)
+                {
+                    // Handle mutation
+                    offspring_activity2.Room = Rooms[random.Next(Rooms.Count)];
+                    offspring_activity2.TimeSlot = 10 + random.Next(6);
+                    offspring_activity2.Facilitator = Facilitators[random.Next(Facilitators.Count)];
+                }
+            }
         }
     }
 }

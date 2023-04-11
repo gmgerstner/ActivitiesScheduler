@@ -92,5 +92,11 @@
             return fitness;
         }
 
+        public Activity Clone()
+        {
+            Activity activity = new Activity(Section, Room, TimeSlot, Facilitator);
+            return activity;
+        }
+
     }
 }
