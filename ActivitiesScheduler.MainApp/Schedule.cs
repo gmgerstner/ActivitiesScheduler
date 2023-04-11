@@ -13,11 +13,10 @@ namespace ActivitiesScheduler.MainApp
 
         public Schedule(double mutationRate)
         {
-            Initialize();
             MutationRate = mutationRate;
         }
 
-        private void Initialize()
+        public void Initialize()
         {
             Facilitators = new List<string>
             {
@@ -78,10 +77,34 @@ namespace ActivitiesScheduler.MainApp
             return sum;
         }
 
-        public void RunGeneration()
+        private Schedule Clone()
         {
-            Activities.Shuffle(random);
-            for (int p = 0; p < Activities.Count; p += 2)
+            Schedule clone = new Schedule(MutationRate);
+            foreach (Activity activity in Activities)
+            {
+                clone.Activities.Add(activity);
+            }
+            foreach (string facilitator in Facilitators)
+            {
+                clone.Facilitators.Add(facilitator);
+            }
+            foreach (Room room in Rooms)
+            {
+                clone.Rooms.Add(room);
+            }
+            foreach (Section section in Sections)
+            {
+                clone.Sections.Add(section);
+            }
+            return clone;
+        }
+
+        public Schedule NextGeneration()
+        {
+            Schedule nextGeneration = Clone();
+
+            //TODO Handle crossover (This is incomplete and probably incorrect)
+            for (int p = 0; p < nextGeneration.Activities.Count; p += 2)
             {
                 // Parents
                 Activity parent_activity1 = Activities[p];
@@ -91,23 +114,61 @@ namespace ActivitiesScheduler.MainApp
                 // Offspring
                 Activity offspring_activity1 = parent_activity1.Clone();
                 Activity offspring_activity2 = parent_activity2.Clone();
+            }
 
-                // Mutation
+            // Handle mutation
+            foreach (var activity in nextGeneration.Activities)
+            {
                 if (random.NextDouble() < MutationRate)
                 {
                     // Handle mutation
-                    offspring_activity1.Room = Rooms[random.Next(Rooms.Count)];
-                    offspring_activity1.TimeSlot = 10 + random.Next(6);
-                    offspring_activity1.Facilitator = Facilitators[random.Next(Facilitators.Count)];
-                }
-                if (random.NextDouble() < MutationRate)
-                {
-                    // Handle mutation
-                    offspring_activity2.Room = Rooms[random.Next(Rooms.Count)];
-                    offspring_activity2.TimeSlot = 10 + random.Next(6);
-                    offspring_activity2.Facilitator = Facilitators[random.Next(Facilitators.Count)];
+                    activity.Room = Rooms[random.Next(Rooms.Count)];
+                    activity.TimeSlot = 10 + random.Next(6);
+                    activity.Facilitator = Facilitators[random.Next(Facilitators.Count)];
                 }
             }
+
+            return nextGeneration;
         }
     }
 }
+
+//Below is an example of crossover
+
+//class Parent
+//{
+//    public int Property1 { get; set; }
+//    public string Property2 { get; set; }
+//}
+
+//class Child
+//{
+//    public int Property1 { get; set; }
+//    public string Property2 { get; set; }
+//}
+
+//class CrossoverOperator
+//{
+//    public static Child Crossover(Parent parent1, Parent parent2)
+//    {
+//        // Create a new child object
+//        Child child = new Child();
+
+//        // Select a random crossover point
+//        int crossoverPoint = Random.Next(0, 2);
+
+//        // Combine properties from the two parents based on the crossover point
+//        if (crossoverPoint == 0)
+//        {
+//            child.Property1 = parent1.Property1;
+//            child.Property2 = parent2.Property2;
+//        }
+//        else
+//        {
+//            child.Property1 = parent2.Property1;
+//            child.Property2 = parent1.Property2;
+//        }
+
+//        return child;
+//    }
+//}
