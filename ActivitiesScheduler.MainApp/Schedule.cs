@@ -34,15 +34,15 @@ namespace ActivitiesScheduler.MainApp
 
             Rooms = new List<Room>
             {
-                new Room("Slater 003", 45 ),
-                new Room("Roman 216",  30 ),
-                new Room("Loft 206",   75 ),
-                new Room("Roman 201",  50 ),
-                new Room("Loft 310",  108 ),
-                new Room("Beach 201" , 60 ),
-                new Room("Beach 301",  75 ),
-                new Room("Logos 325", 450 ),
-                new Room("Frank 119",  60  ),
+                new Room("Slater 003", 45),
+                new Room("Roman 216",  30),
+                new Room("Loft 206",   75),
+                new Room("Roman 201",  50),
+                new Room("Loft 310",  108),
+                new Room("Beach 201" , 60),
+                new Room("Beach 301",  75),
+                new Room("Logos 325", 450),
+                new Room("Frank 119",  60),
             };
 
             Sections = new List<Section>()
@@ -103,17 +103,48 @@ namespace ActivitiesScheduler.MainApp
         {
             Schedule nextGeneration = Clone();
 
-            //TODO Handle crossover (This is incomplete and probably incorrect)
-            for (int p = 0; p < nextGeneration.Activities.Count; p += 2)
+            // Handle crossover
+            foreach (Activity activity in Activities)
             {
-                // Parents
-                Activity parent_activity1 = Activities[p];
-                Activity parent_activity2 = Activities[p + 1];
+                // Select two parents, randomly
+                Activity parent1 = activity;
+                Activity parent2 = Activities[random.Next(Activities.Count)];
+                while (parent1 == parent2)
+                {
+                    // Make sure two parents aren't the same parent
+                    parent2 = Activities[random.Next(Activities.Count)];
+                }
+                // Create one child from parents
+                Section childSection = (random.Next(2) == 1 ? parent1.Section : parent2.Section);
+                Room childRoom = (random.Next(2) == 1 ? parent1.Room : parent2.Room);
+                int childTimeSlot = (random.Next(2) != 1 ? parent1.TimeSlot : parent2.TimeSlot);
+                string childFacilitator = (random.Next(2) == 1 ? parent1.Facilitator : parent2.Facilitator);
+                Activity child = new Activity(childSection, childRoom, childTimeSlot, childFacilitator);
 
-                //TODO Is this correct for offsprings?
-                // Offspring
-                Activity offspring_activity1 = parent_activity1.Clone();
-                Activity offspring_activity2 = parent_activity2.Clone();
+                // Determine current fitness using the parents as-is (in other words the previous generation's fitness)
+                double previousGenerationFitness = TotalFitness();
+
+                //TODO Determine fitness using the child in place of the parent with the same section.
+                Activity target;
+                if(parent1.Section.Name == child.Section.Name)
+                {
+                    target = parent1; 
+                }
+                else
+                {
+                    target= parent2;
+                }
+                nextGeneration.Activities.Remove(target);
+                nextGeneration.Activities.Add(child);
+                double nextGenerationFitness = nextGeneration.TotalFitness();
+
+                // If new fitness is better, keep new schedule
+                if(nextGenerationFitness < previousGenerationFitness)
+                {
+                    // Not better, keep parent
+                    nextGeneration.Activities.Remove(child);
+                    nextGeneration.Activities.Add(target);
+                }
             }
 
             // Handle mutation
@@ -121,7 +152,6 @@ namespace ActivitiesScheduler.MainApp
             {
                 if (random.NextDouble() < MutationRate)
                 {
-                    // Handle mutation
                     activity.Room = Rooms[random.Next(Rooms.Count)];
                     activity.TimeSlot = 10 + random.Next(6);
                     activity.Facilitator = Facilitators[random.Next(Facilitators.Count)];
