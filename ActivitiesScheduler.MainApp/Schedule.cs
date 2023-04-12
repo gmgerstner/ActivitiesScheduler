@@ -1,4 +1,5 @@
 ﻿using Extensions.Standard; // Softmax
+using System.Linq;
 
 namespace ActivitiesScheduler.MainApp
 {
@@ -135,7 +136,7 @@ namespace ActivitiesScheduler.MainApp
                 {
                     // Not better, keep parent
                     nextGeneration.Activities.Remove(child);
-                    nextGeneration.Activities.Add(target);
+                    nextGeneration.Activities.Add(target!);
                 }
             }
 
@@ -154,43 +155,3 @@ namespace ActivitiesScheduler.MainApp
         }
     }
 }
-
-//Below is an example of crossover
-
-//class Parent
-//{
-//    public int Property1 { get; set; }
-//    public string Property2 { get; set; }
-//}
-
-//class Child
-//{
-//    public int Property1 { get; set; }
-//    public string Property2 { get; set; }
-//}
-
-//class CrossoverOperator
-//{
-//    public static Child Crossover(Parent parent1, Parent parent2)
-//    {
-//        // Create a new child object
-//        Child child = new Child();
-
-//        // Select a random crossover point
-//        int crossoverPoint = Random.Next(0, 2);
-
-//        // Combine properties from the two parents based on the crossover point
-//        if (crossoverPoint == 0)
-//        {
-//            child.Property1 = parent1.Property1;
-//            child.Property2 = parent2.Property2;
-//        }
-//        else
-//        {
-//            child.Property1 = parent2.Property1;
-//            child.Property2 = parent1.Property2;
-//        }
-
-//        return child;
-//    }
-//}

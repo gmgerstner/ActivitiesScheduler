@@ -23,7 +23,7 @@
             foreach (var activity in clientAgency.Activities)
             {
                 if (activity == this) continue;
-                if ((activity.Room == Room) && (activity.TimeSlot == this.TimeSlot))
+                if ((activity.Room == Room) && (activity.TimeSlot == TimeSlot))
                 {
                     fitness -= 0.5;
                 }
@@ -67,16 +67,42 @@
                 fitness -= 0.1;
             }
 
-            //TODO Finish coding fitness function
-
             // Facilitator load: 
-            //    Activity facilitator is scheduled for only 1 activity in this time slot: + 0.2 
-            //    Activity facilitator is scheduled for more than one activity at the same time: - 0.2 
-            //    Facilitator is scheduled to oversee more than 4 activities total: -0.5 
-            //    Facilitator is scheduled to oversee 1 or 2 activities*: -0.4 
-            //        Exception: Dr. Tyler is committee chair and has other demands on his time. 
-            //            *No penalty if he’s only required to oversee < 2 activities. 
-            //    If any facilitator scheduled for consecutive time slots: Same rules as for SLA 191 and SLA 101 in consecutive time slots—see below.              
+
+            int activitiesInCurrentTimeSlot = clientAgency.Activities
+                .Where(a => a.Facilitator == Facilitator)
+                .Where(a => a.TimeSlot == TimeSlot)
+                .Count();
+            if (activitiesInCurrentTimeSlot == 1)
+            {
+                // Activity facilitator is scheduled for only 1 activity in this time slot: + 0.2 
+                fitness += 0.02;
+            }
+            else if (activitiesInCurrentTimeSlot >= 2)
+            {
+                // Activity facilitator is scheduled for more than one activity at the same time: - 0.2 
+                fitness -= 0.2;
+            }
+            int activitiesTotal = clientAgency.Activities
+                .Where(a => a.Facilitator == Facilitator)
+                .Count();
+            if (activitiesTotal > 4)
+            {
+                // Facilitator is scheduled to oversee more than 4 activities total: -0.5 
+                fitness -= 0.5;
+            }
+            if (activitiesTotal <= 2)
+            {
+                // Facilitator is scheduled to oversee 1 or 2 activities*: -0.4 
+                if (activitiesTotal >= 2 && Facilitator != "Tyler")
+                {
+                    // Exception: Dr. Tyler is committee chair and has other demands on his time. 
+                    //     *No penalty if he’s only required to oversee < 2 activities. 
+                    fitness -= 0.4;
+                }
+            }
+            //TODO Finish coding fitness function
+            // If any facilitator scheduled for consecutive time slots: Same rules as for SLA 191 and SLA 101 in consecutive time slots—see below.              
 
             //Activity-specific adjustments: 
             // The 2 sections of SLA 101 are more than 4 hours apart: + 0.5 
@@ -88,7 +114,7 @@
             // It’s fine if neither is in one of those buildings, of activity; we just want to avoid having consecutive activities being widely separated.  
             // A section of SLA 191 and a section of SLA 101 are taught separated by 1 hour (e.g., 10 AM & 12:00 Noon): + 0.25 
             // A section of SLA 191 and a section of SLA 101 are taught in the same time slot: -0.25              
-         
+
             return fitness;
         }
 

@@ -30,7 +30,7 @@
             }
 
             Console.WriteLine();
-            Console.WriteLine($"Generations: {generations}");
+            Console.WriteLine($"Generations: {generation}");
             Console.WriteLine($"TotalFitness: {schedule.TotalFitness()}");
         }
     }
