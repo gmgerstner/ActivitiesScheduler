@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ActivitiesScheduler.MainApp": {
+      "commandName": "Project",
+      "commandLineArgs": "0.01 100"
+    }
+  }
+}

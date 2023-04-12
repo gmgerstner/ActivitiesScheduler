@@ -124,22 +124,14 @@ namespace ActivitiesScheduler.MainApp
                 // Determine current fitness using the parents as-is (in other words the previous generation's fitness)
                 double previousGenerationFitness = TotalFitness();
 
-                //TODO Determine fitness using the child in place of the parent with the same section.
-                Activity target;
-                if(parent1.Section.Name == child.Section.Name)
-                {
-                    target = parent1; 
-                }
-                else
-                {
-                    target= parent2;
-                }
-                nextGeneration.Activities.Remove(target);
+                // Determine fitness using the child in place of the parent with the same section.
+                Activity? target = nextGeneration.Activities.Find(a => a.Section.Name == childSection.Name);
+                nextGeneration.Activities.Remove(target!);
                 nextGeneration.Activities.Add(child);
                 double nextGenerationFitness = nextGeneration.TotalFitness();
 
                 // If new fitness is better, keep new schedule
-                if(nextGenerationFitness < previousGenerationFitness)
+                if (nextGenerationFitness < previousGenerationFitness)
                 {
                     // Not better, keep parent
                     nextGeneration.Activities.Remove(child);
