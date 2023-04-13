@@ -67,7 +67,7 @@
                 fitness -= 0.1;
             }
 
-            // Facilitator load: 
+            // ***** Facilitator load ***** 
 
             int activitiesInCurrentTimeSlot = clientAgency.Activities
                 .Where(a => a.Facilitator == Facilitator)
@@ -104,16 +104,41 @@
             //TODO Finish coding fitness function
             // If any facilitator scheduled for consecutive time slots: Same rules as for SLA 191 and SLA 101 in consecutive time slots—see below.              
 
-            //Activity-specific adjustments: 
+            // ***** Activity-specific adjustments *****
+
             // The 2 sections of SLA 101 are more than 4 hours apart: + 0.5 
-            // Both sections of SLA 101 are in the same time slot: -0.5 
+            var sla101actvities = clientAgency
+                .Activities
+                .Where(a => a.Section.Name.StartsWith("SLA100")) // Requirements specify 101 but is probably wrong and should be 100
+                .ToList();
+            int time_diff_101 = Math.Abs(sla101actvities[0].TimeSlot - sla101actvities[1].TimeSlot);
             // The 2 sections of SLA 191 are more than 4 hours apart: + 0.5 
+            if (time_diff_101 > 4)
+            {
+                fitness += 0.5;
+            }
+            // Both sections of SLA 101 are in the same time slot: -0.5 
+            if(time_diff_101 == 0)
+            {
+                fitness -= 0.5;
+            }
+
+            var sla191actvities = clientAgency
+                .Activities
+                .Where(a => a.Section.Name.StartsWith("SLA191"))
+                .ToList();
+            int time_diff_191 = Math.Abs(sla101actvities[0].TimeSlot - sla101actvities[1].TimeSlot);
             // Both sections of SLA 191 are in the same time slot: -0.5 
+            if(time_diff_191 == 0)
+            {
+                fitness -= 0.5;
+            }
+
             // A section of SLA 191 and a section of SLA 101 are overseen in consecutive time slots (e.g., 10 AM & 11 AM): +0.5 
             //      In this case only (consecutive time slots), one of the activities is in Roman or Beach, and the other isn’t: -0.4 
             // It’s fine if neither is in one of those buildings, of activity; we just want to avoid having consecutive activities being widely separated.  
             // A section of SLA 191 and a section of SLA 101 are taught separated by 1 hour (e.g., 10 AM & 12:00 Noon): + 0.25 
-            // A section of SLA 191 and a section of SLA 101 are taught in the same time slot: -0.25              
+            // A section of SLA 191 and a section of SLA 101 are taught in the same time slot: -0.25
 
             return fitness;
         }
