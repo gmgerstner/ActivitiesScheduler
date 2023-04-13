@@ -5,17 +5,10 @@ namespace ActivitiesScheduler.MainApp
 {
     internal class Schedule
     {
-        private Random random = new Random();
         public List<Activity> Activities { get; set; } = new List<Activity>();
         public List<string> Facilitators { get; set; } = new List<string>();
         public List<Room> Rooms { get; set; } = new List<Room>();
         public List<Section> Sections { get; set; } = new List<Section>();
-        public double MutationRate { get; }
-
-        public Schedule(double mutationRate)
-        {
-            MutationRate = mutationRate;
-        }
 
         public void Initialize()
         {
@@ -64,11 +57,11 @@ namespace ActivitiesScheduler.MainApp
             Activities = new List<Activity>();
             foreach (Section section in Sections)
             {
-                Activities.Add(new Activity(section, Rooms[random.Next(Rooms.Count)], 10 + random.Next(6), Facilitators[random.Next(Facilitators.Count)]));
+                Activities.Add(new Activity(section, Rooms[Program.random.Next(Rooms.Count)], 10 + Program.random.Next(6), Facilitators[Program.random.Next(Facilitators.Count)]));
             }
         }
 
-        public double TotalFitness()
+        public double Fitness()
         {
             double sum = 0;
             foreach (Activity activity in Activities)
@@ -78,9 +71,9 @@ namespace ActivitiesScheduler.MainApp
             return sum;
         }
 
-        private Schedule Clone()
+        public Schedule Clone()
         {
-            Schedule clone = new Schedule(MutationRate);
+            Schedule clone = new Schedule();
             foreach (Activity activity in Activities)
             {
                 clone.Activities.Add(activity);
@@ -100,58 +93,35 @@ namespace ActivitiesScheduler.MainApp
             return clone;
         }
 
-        public Schedule NextGeneration()
+        public static Schedule CreateChildSchedule(Schedule parent1, Schedule parent2)
         {
-            Schedule nextGeneration = Clone();
+            var childSchedule = new Schedule();
 
-            // Handle crossover
-            foreach (Activity activity in Activities)
+            double roll = Program.random.NextDouble();
+            if (roll <= Program.MutationRate)
             {
-                // Select two parents, randomly
-                Activity parent1 = activity;
-                Activity parent2 = Activities[random.Next(Activities.Count)];
-                while (parent1 == parent2)
+                // Mutation
+                childSchedule = new Schedule();
+                childSchedule.Initialize();
+            }
+            else
+            {
+                // Crossover
+                foreach (var activity1 in parent1.Activities)
                 {
-                    // Make sure two parents aren't the same parent
-                    parent2 = Activities[random.Next(Activities.Count)];
-                }
-                // Create one child from parents
-                Section childSection = (random.Next(2) == 1 ? parent1.Section : parent2.Section);
-                Room childRoom = (random.Next(2) == 1 ? parent1.Room : parent2.Room);
-                int childTimeSlot = (random.Next(2) != 1 ? parent1.TimeSlot : parent2.TimeSlot);
-                string childFacilitator = (random.Next(2) == 1 ? parent1.Facilitator : parent2.Facilitator);
-                Activity child = new Activity(childSection, childRoom, childTimeSlot, childFacilitator);
-
-                // Determine current fitness using the parents as-is (in other words the previous generation's fitness)
-                double previousGenerationFitness = TotalFitness();
-
-                // Determine fitness using the child in place of the parent with the same section.
-                Activity? target = nextGeneration.Activities.Find(a => a.Section.Name == childSection.Name);
-                nextGeneration.Activities.Remove(target!);
-                nextGeneration.Activities.Add(child);
-                double nextGenerationFitness = nextGeneration.TotalFitness();
-
-                // If new fitness is better, keep new schedule
-                if (nextGenerationFitness < previousGenerationFitness)
-                {
-                    // Not better, keep parent
-                    nextGeneration.Activities.Remove(child);
-                    nextGeneration.Activities.Add(target!);
+                    var activity2 = parent2.Activities.Find(a => a.Section.Name == activity1.Section.Name)!;
+                    var choice = Program.random.Next(2);
+                    if (choice == 0)
+                    {
+                        childSchedule.Activities.Add(activity1.Clone());
+                    }
+                    else
+                    {
+                        childSchedule.Activities.Add(activity2.Clone());
+                    }
                 }
             }
-
-            // Handle mutation
-            foreach (var activity in nextGeneration.Activities)
-            {
-                if (random.NextDouble() < MutationRate)
-                {
-                    activity.Room = Rooms[random.Next(Rooms.Count)];
-                    activity.TimeSlot = 10 + random.Next(6);
-                    activity.Facilitator = Facilitators[random.Next(Facilitators.Count)];
-                }
-            }
-
-            return nextGeneration;
+            return childSchedule.Clone();
         }
     }
 }
