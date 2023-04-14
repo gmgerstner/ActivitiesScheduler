@@ -23,7 +23,7 @@
                 schedules.Add(schedule);
             }
             var previousFitness = schedules.Average(s => s.Fitness());
-            Console.WriteLine($"Generation #: {1}\t\tFitness: {previousFitness}");
+            Console.WriteLine($"Generation #: {1}  Fitness: {previousFitness:F2}");
 
             // Run generations
             for (int g = 1; g < generations; g++)
@@ -49,7 +49,7 @@
                 var nextFitness = nextGeneration.Average(s => s.Fitness());
 
                 var change = Math.Abs((nextFitness - previousFitness) / previousFitness);
-                Console.WriteLine($"Generation #: {g + 1}\tFitness: {nextFitness:F2}\tImprovement: {change * 100:F2}%");
+                Console.WriteLine($"Generation #: {g + 1}  Fitness: {nextFitness:F2}  Improvement: {change * 100:F2}%");
 
                 // Replace generation with new one
                 previousFitness = nextFitness;
@@ -63,7 +63,7 @@
             var bestSchedule = schedules.OrderByDescending(s => s.Fitness()).First();
 
             Console.WriteLine();
-            Console.WriteLine($"Best Fitness: {bestSchedule.Fitness:F2}");
+            Console.WriteLine($"Best Fitness: {bestSchedule.Fitness():F2}");
 
             Console.WriteLine();
             Console.WriteLine("*** Schedule ***");
