@@ -94,15 +94,48 @@
             if (activitiesTotal <= 2)
             {
                 // Facilitator is scheduled to oversee 1 or 2 activities*: -0.4 
-                if (activitiesTotal >= 2 && Facilitator != "Tyler")
+                if (activitiesTotal >= 2 && activitiesTotal > 0 && Facilitator != "Tyler")
                 {
-                    // Exception: Dr. Tyler is committee chair and has other demands on his time. 
-                    //     *No penalty if he’s only required to oversee < 2 activities. 
                     fitness -= 0.4;
                 }
+                else if (activitiesTotal < 2 && Facilitator == "Tyler")
+                {
+                    // Exception: Dr. Tyler is committee chair and has other demands on his time. 
+                    //     *No penalty if he’s only required to oversee < 2 activities.
+                }
             }
-            //TODO Finish coding fitness function
-            // If any facilitator scheduled for consecutive time slots: Same rules as for SLA 191 and SLA 101 in consecutive time slots—see below.              
+            // If any facilitator scheduled for consecutive time slots: Same rules as for SLA 191 and SLA 101 in consecutive time slots—see below.
+            bool hasBefore = clientAgency.Activities.Where(a => a.TimeSlot == TimeSlot - 1).Where(a => a.Facilitator == Facilitator).Any();
+            bool hasAfter = clientAgency.Activities.Where(a => a.TimeSlot == TimeSlot + 1).Where(a => a.Facilitator == Facilitator).Any();
+            bool hasAdjacent = hasBefore || hasAfter;
+            if (hasAdjacent)
+            {
+                // A section is overseen by the same facilitator in consecutive time slots (e.g., 10 AM & 11 AM): +0.5
+                //  // In this case only (consecutive time slots), one of the activities is in Roman or Beach, and the other isn’t: -0.4
+                //  // It’s fine if neither is in one of those buildings, of activity; we just want to avoid having consecutive activities being widely separated.
+
+                bool thisOneInRomanOrBeach = Room.Name == "Roman" || Room.Name == "Beach";
+                bool anyOthersInRomanOrBeach = clientAgency.Activities.Where(a => a.Facilitator == Facilitator).Where(a => a.Room.Name == "Roman" || Room.Name == "Beach").Any();
+                if (thisOneInRomanOrBeach || anyOthersInRomanOrBeach)
+                {
+                    fitness -= 0.4;
+                }
+                else
+                {
+                    fitness += 0.5;
+                }
+            }
+            else
+            {
+                fitness += 0.5;
+            }
+
+            //The a facilitator's sections are more than 4 hours apart: + 0.5 
+            List<Activity> fac_list = clientAgency.Activities.Where(a => a.Facilitator == Facilitator).Where(a => Math.Abs(a.TimeSlot - TimeSlot) > 4).ToList();
+            if (fac_list.Any())
+            {
+                fitness += 0.5;
+            }
 
             // ***** Activity-specific adjustments *****
 
@@ -118,7 +151,7 @@
                 fitness += 0.5;
             }
             // Both sections of SLA 101 are in the same time slot: -0.5 
-            if(time_diff_101 == 0)
+            if (time_diff_101 == 0)
             {
                 fitness -= 0.5;
             }
@@ -129,17 +162,57 @@
                 .ToList();
             int time_diff_191 = Math.Abs(sla101actvities[0].TimeSlot - sla101actvities[1].TimeSlot);
             // Both sections of SLA 191 are in the same time slot: -0.5 
-            if(time_diff_191 == 0)
+            if (time_diff_191 == 0)
             {
                 fitness -= 0.5;
             }
 
             // A section of SLA 191 and a section of SLA 101 are overseen in consecutive time slots (e.g., 10 AM & 11 AM): +0.5 
-            //      In this case only (consecutive time slots), one of the activities is in Roman or Beach, and the other isn’t: -0.4 
-            // It’s fine if neither is in one of those buildings, of activity; we just want to avoid having consecutive activities being widely separated.  
-            // A section of SLA 191 and a section of SLA 101 are taught separated by 1 hour (e.g., 10 AM & 12:00 Noon): + 0.25 
-            // A section of SLA 191 and a section of SLA 101 are taught in the same time slot: -0.25
+            string otherSectionName;
+            if (Section.Name.StartsWith("SLA100")) otherSectionName = "SLA191";
+            else if (Section.Name.StartsWith("SLA191")) otherSectionName = "SLA100";
+            else otherSectionName = "";
+            if (otherSectionName != "")
+            {
+                bool consecutive = clientAgency.Activities
+                    .Where(a => a.Section.Name == otherSectionName)
+                    .Where(a => a.TimeSlot == a.TimeSlot - 1 || a.TimeSlot == a.TimeSlot + 1)
+                    .Any();
+                // In this case only (consecutive time slots), one of the activities is in Roman or Beach, and the other isn’t: -0.4 
+                // It’s fine if neither is in one of those buildings, of activity; we just want to avoid having consecutive activities being widely separated.  
+                if (consecutive)
+                {
+                    bool thisOneInRomanOrBeach = Room.Name == "Roman" || Room.Name == "Beach";
+                    bool anyOthersInRomanOrBeach = clientAgency.Activities.Where(a => a.Section.Name == otherSectionName).Where(a => a.Room.Name == "Roman" || Room.Name == "Beach").Any();
+                    if (thisOneInRomanOrBeach || anyOthersInRomanOrBeach)
+                    {
+                        fitness -= 0.4;
+                    }
+                    else
+                    {
+                        fitness += 0.5;
+                    }
+                }
+                else
+                {
+                    fitness += 0.5;
+                }
+            }
 
+            // A section of SLA 191 and a section of SLA 101 are taught separated by 1 hour (e.g., 10 AM & 12:00 Noon): + 0.25 
+            bool timeSlotBefore = clientAgency.Activities.Where(a => a.TimeSlot - 2 == TimeSlot).Where(a => a.Section.Name.StartsWith(otherSectionName)).Any();
+            bool timeSlotAfter = clientAgency.Activities.Where(a => a.TimeSlot + 2 == TimeSlot).Where(a => a.Section.Name.StartsWith(otherSectionName)).Any();
+            if (timeSlotBefore && timeSlotAfter)
+            {
+                fitness += 0.25;
+            }
+
+            // A section of SLA 191 and a section of SLA 101 are taught in the same time slot: -0.25
+            bool sameTimeSlot = clientAgency.Activities.Where(a => a.TimeSlot == TimeSlot).Where(a => a.Section.Name.StartsWith(otherSectionName)).Any();
+            if (sameTimeSlot)
+            {
+                return 0.25;
+            }
             return fitness;
         }
 
